@@ -4,6 +4,14 @@ const NodeCache = require('node-cache');
 const app = express();
 const cache = new NodeCache({ stdTTL: 86400 }); // Cache avatars voor 24 uur
 
+// CORS middleware toevoegen
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*'); // Sta alle domeinen toe
+  res.header('Access-Control-Allow-Methods', 'GET'); // Sta alleen GET-requests toe
+  res.header('Access-Control-Allow-Headers', 'Content-Type'); // Sta deze headers toe
+  next();
+});
+
 app.use(express.json());
 
 // Endpoint om Roblox-gebruikersgegevens op te halen
