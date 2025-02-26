@@ -18,6 +18,11 @@ app.use(express.json());
 app.get('/get-by-username', async (req, res) => {
   const { username } = req.query;
 
+  // Valideer de gebruikersnaam
+  if (!username || typeof username !== 'string') {
+    return res.status(400).json({ error: 'Username is required and must be a string' });
+  }
+
   // Check cache first
   const cachedData = cache.get(username);
   if (cachedData) {
@@ -25,12 +30,27 @@ app.get('/get-by-username', async (req, res) => {
   }
 
   try {
+    // Haal gebruikersgegevens op van de Roblox API
     const response = await fetch(`https://api.roblox.com/users/get-by-username?username=${username}`);
+    
+    // Controleer of de response OK is
+    if (!response.ok) {
+      throw new Error(`Roblox API returned ${response.status}: ${response.statusText}`);
+    }
+
     const data = await response.json();
-    cache.set(username, data); // Cache the data
+
+    // Controleer of de gebruiker bestaat
+    if (!data.Id) {
+      throw new Error('User not found');
+    }
+
+    // Cache de gegevens
+    cache.set(username, data);
     res.json(data);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch data' });
+    console.error('Error fetching Roblox data:', error);
+    res.status(500).json({ error: 'Failed to fetch data', details: error.message });
   }
 });
 
